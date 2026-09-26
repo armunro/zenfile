@@ -1,0 +1,323 @@
+﻿<Window x:Class="Zenfile.Views.PopupPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Zenfile.ViewModels"
+        xmlns:models="clr-namespace:Zenfile.Models"
+        Title="Zenfile - Choose Destination"
+        Width="580" Height="520"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        KeyDown="Window_KeyDown"
+        MouseDown="Window_MouseDown">
+
+    <Border Background="{StaticResource BgCardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.65" Color="#000000"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Title & Close -->
+                <RowDefinition Height="Auto"/>
+                <!-- File Target Summary Banner -->
+                <RowDefinition Height="Auto"/>
+                <!-- Search Box -->
+                <RowDefinition Height="Auto"/>
+                <!-- Folder List / New Folder Area -->
+                <RowDefinition Height="*"/>
+                <!-- Transfer Options (Move/Copy, Conflict) -->
+                <RowDefinition Height="Auto"/>
+                <!-- Actions & Status -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource AccentBlueBrush}" CornerRadius="6" Width="26" Height="26" Margin="0,0,10,0">
+                        <TextBlock Text="🚀" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Zenfile Destination Picker"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="✕"
+                        Command="{Binding CancelCommand}"
+                        Width="28" Height="28"
+                        Padding="0"
+                        FontSize="12"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        ToolTip="Close (Esc)"/>
+            </Grid>
+
+            <!-- Files Summary Banner -->
+            <Border Grid.Row="1"
+                    Background="{StaticResource BgInputBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="📁" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding FilesSummaryText}"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding FileCount, StringFormat='{}Ready to transfer {0} item(s)'}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Search Filter Bar & New Folder Toggle -->
+            <Grid Grid.Row="2" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="SearchTextBox"
+                         Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}"
+                         Padding="10,8"
+                         FontSize="13"
+                         Background="{StaticResource BgInputBrush}"
+                         BorderBrush="{StaticResource BorderBrush}"
+                         Foreground="{StaticResource TextPrimaryBrush}"
+                         Margin="0,0,8,0"
+                         VerticalContentAlignment="Center"/>
+
+                <!-- Placeholder hint when search is empty -->
+                <TextBlock Text="🔍 Filter tasks / project folders..."
+                           IsHitTestVisible="False"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Visibility="{Binding SearchFilter, Converter={StaticResource NullToVis}, ConverterParameter=Inverse}"/>
+
+                <Button Grid.Column="1"
+                        Content="+ New Task"
+                        Command="{Binding ToggleNewTaskModeCommand}"
+                        Style="{StaticResource SecondaryButton}"
+                        Padding="10,6"
+                        FontSize="12"/>
+            </Grid>
+
+            <!-- Task List & New Task Inline Panel -->
+            <Grid Grid.Row="3" Margin="0,0,0,12">
+                <!-- Main Task List -->
+                <Border Background="{StaticResource BgInputBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Visibility="{Binding IsCreatingNewTask, Converter={StaticResource InverseBoolToVis}}">
+                    <ListBox ItemsSource="{Binding FilteredTasks}"
+                             SelectedItem="{Binding SelectedTask}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             SelectionMode="Single"
+                             Margin="4">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:WorkTaskFolder}">
+                                <Border Margin="2,2"
+                                        Padding="10,8"
+                                        CornerRadius="6"
+                                        Background="{StaticResource BgCardBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Width="28" Height="28"
+                                                Background="{StaticResource BgHoverBrush}"
+                                                CornerRadius="4"
+                                                Margin="0,0,10,0"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="📂" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="Bold"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding DisplaySubtitle}"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+
+                                        <!-- Work Root Badge -->
+                                        <Border Grid.Column="2"
+                                                Background="{StaticResource BgHoverBrush}"
+                                                BorderBrush="{StaticResource BorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="6,2"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding WorkRootName}"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource AccentBlueBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <!-- Inline New Task Panel -->
+                <Border Background="{StaticResource BgInputBrush}"
+                        BorderBrush="{StaticResource AccentBlueBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16"
+                        Visibility="{Binding IsCreatingNewTask, Converter={StaticResource BoolToVis}}">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Create New Task / Project Folder"
+                                   FontWeight="Bold"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Target Work Root:"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding AvailableRoots}"
+                                  SelectedItem="{Binding SelectedRootForNewTask}"
+                                  DisplayMemberPath="Name"
+                                  Padding="8,6"
+                                  Margin="0,0,0,12"
+                                  Background="{StaticResource BgCardBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                        <TextBlock Text="New Folder Name:"
+                                   FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding NewTaskName, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="8,6"
+                                 Margin="0,0,0,16"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Cancel"
+                                    Command="{Binding ToggleNewTaskModeCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Margin="0,0,8,0"/>
+                            <Button Content="Create and Select"
+                                    Command="{Binding ConfirmCreateNewTaskCommand}"
+                                    Style="{StaticResource PrimaryButton}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Options Bar (Transfer Mode & Conflict) -->
+            <Grid Grid.Row="4" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Mode selector -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Action:"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,8,0"/>
+                    <RadioButton Content="Move"
+                                 IsChecked="{Binding TransferMode, Converter={x:Null}, Mode=OneWay}"
+                                 Click="OnModeMoveClicked"
+                                 x:Name="RbMove"
+                                 Style="{StaticResource PillRadioButton}"
+                                 Margin="0,0,6,0"/>
+                    <RadioButton Content="Copy"
+                                 Click="OnModeCopyClicked"
+                                 x:Name="RbCopy"
+                                 Style="{StaticResource PillRadioButton}"/>
+                </StackPanel>
+
+                <!-- Conflict option -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="If exists:"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,8,0"/>
+                    <ComboBox SelectedValue="{Binding ConflictResolution}"
+                              SelectedValuePath="Tag"
+                              Padding="8,4"
+                              Background="{StaticResource BgInputBrush}"
+                              Foreground="{StaticResource TextPrimaryBrush}">
+                        <ComboBoxItem Content="Auto-Rename" Tag="{x:Static models:ConflictResolution.AutoRename}"/>
+                        <ComboBoxItem Content="Overwrite" Tag="{x:Static models:ConflictResolution.Overwrite}"/>
+                        <ComboBoxItem Content="Skip" Tag="{x:Static models:ConflictResolution.Skip}"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <!-- Bottom Actions Bar & Status -->
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="12"
+                               Foreground="{StaticResource AccentGreenBrush}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Open Folder"
+                            Command="{Binding OpenDestinationCommand}"
+                            Visibility="{Binding IsSuccess, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"/>
+
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"/>
+
+                    <Button Content="Execute Transfer (Enter)"
+                            Command="{Binding ExecuteTransferCommand}"
+                            Style="{StaticResource PrimaryButton}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
