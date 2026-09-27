@@ -21,7 +21,7 @@ public class ViewModelTests : IDisposable
 
     public ViewModelTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), $"workdrop_vm_test_{Guid.NewGuid():N}");
+        _tempDir = Path.Combine(Path.GetTempPath(), $"zenfile_vm_test_{Guid.NewGuid():N}");
         Directory.CreateDirectory(_tempDir);
         _configPath = Path.Combine(_tempDir, "config.json");
 

@@ -13,7 +13,7 @@ public class WorkRootServiceTests : IDisposable
 
     public WorkRootServiceTests()
     {
-        _tempRootDirectory = Path.Combine(Path.GetTempPath(), $"workdrop_test_root_{Guid.NewGuid():N}");
+        _tempRootDirectory = Path.Combine(Path.GetTempPath(), $"zenfile_test_root_{Guid.NewGuid():N}");
         Directory.CreateDirectory(_tempRootDirectory);
         _service = new WorkRootService();
     }

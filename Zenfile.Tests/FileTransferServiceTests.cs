@@ -15,8 +15,8 @@ public class FileTransferServiceTests : IDisposable
     public FileTransferServiceTests()
     {
         var temp = Path.GetTempPath();
-        _sourceDir = Path.Combine(temp, $"workdrop_src_{Guid.NewGuid():N}");
-        _destDir = Path.Combine(temp, $"workdrop_dst_{Guid.NewGuid():N}");
+        _sourceDir = Path.Combine(temp, $"zenfile_src_{Guid.NewGuid():N}");
+        _destDir = Path.Combine(temp, $"zenfile_dst_{Guid.NewGuid():N}");
 
         Directory.CreateDirectory(_sourceDir);
         Directory.CreateDirectory(_destDir);

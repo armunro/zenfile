@@ -12,7 +12,7 @@ public class SettingsServiceTests : IDisposable
 
     public SettingsServiceTests()
     {
-        _tempConfigPath = Path.Combine(Path.GetTempPath(), $"workdrop_test_config_{Guid.NewGuid():N}.json");
+        _tempConfigPath = Path.Combine(Path.GetTempPath(), $"zenfile_test_config_{Guid.NewGuid():N}.json");
     }
 
     public void Dispose()

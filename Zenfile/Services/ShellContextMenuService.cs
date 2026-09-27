@@ -12,6 +12,7 @@ namespace Zenfile.Services;
 public class ShellContextMenuService : IShellContextMenuService
 {
     private const string AppKeyName = "Zenfile";
+    private static readonly string[] LegacyAppKeyNames = ["WorkDrop"];
     private const string FileShellPath = @"Software\Classes\*\shell";
     private const string DirectoryShellPath = @"Software\Classes\Directory\shell";
 
@@ -143,12 +144,20 @@ public class ShellContextMenuService : IShellContextMenuService
             return;
 
         var targets = new[] { FileShellPath, DirectoryShellPath };
+        var keyNames = new[] { AppKeyName }.Concat(LegacyAppKeyNames);
+
         foreach (var parentPath in targets)
         {
             try
             {
                 using var parentKey = Registry.CurrentUser.OpenSubKey(parentPath, true);
-                parentKey?.DeleteSubKeyTree(AppKeyName, false);
+                if (parentKey != null)
+                {
+                    foreach (var keyName in keyNames)
+                    {
+                        parentKey.DeleteSubKeyTree(keyName, false);
+                    }
+                }
             }
             catch (Exception ex)
             {
